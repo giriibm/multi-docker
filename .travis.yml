@@ -1,0 +1,33 @@
+sudo: required
+services:
+  - docker
+env:
+  global:
+    - SHA=$(git rev-parse HEAD)
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+before_install:
+  
+  - docker build -t gsab/react-test -f ./client/Dockerfile.dev ./client
+  - docker build -t gsab/react-test -f ./client/Dockerfile.dev ./client
+  - docker build -t gsab/react-test -f ./client/Dockerfile.dev ./client
+  - docker build -t gsab/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run gsab/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t gsab/multi-client ./client
+  - docker build -t gsab/multi-ngnix ./ngnix
+  - docker build -t gsab/multi-server ./server
+  - docker build -t gsab/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker push  gsab/multi-client
+  - docker push  gsab/multi-ngnix
+  - docker push  gsab/multi-server
+  - docker push  gsab/multi-worker
+
+deploy:
+  provider: script
+  script: bash ./deploy.sh
+  on:
+    branch: master
